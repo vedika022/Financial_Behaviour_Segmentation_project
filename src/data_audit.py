@@ -6,7 +6,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_PATH = ROOT_DIR/ 'Data'/ 'Customers.csv'
 df = pd.read_csv(RAW_DATA_PATH)
 
-print("\nDisplaying First Five columns :")
+print("\nDisplaying First rows :")
 print(df.head())
 
 data_summary = pd.DataFrame({
@@ -19,8 +19,18 @@ data_summary = pd.DataFrame({
 print("\n Display Data Summary")
 print(data_summary, '\n')
 
-# Finding Outliers 
+
+
+# Finding Outliers and missing features (if any)
 features_name = ['Annual Income ($)', 'Spending Score (1-100)', 'Family Size','Work Experience']
+
+missing_features = [col for col in features_name if col not in df.columns]
+
+if missing_features:
+    raise ValueError(f"Missing columns: {missing_features}")
+
+features = df[features_name]
+
 features = df[features_name]
 
 outliers_index = []
@@ -42,3 +52,4 @@ for column in features_name:
             outliers_index.append(idx)
     
     print(f"Number of outliers in {column}: {len(outliers)}")
+

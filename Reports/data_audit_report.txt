@@ -1,0 +1,21 @@
+DATA AUDIT REPORT
+
+Dataset: Customers.csv
+Total Records: 2000
+Total Features: 8
+
+1. MISSING VALUES
+
+Profession:
+    Missing values: 35
+    Missing percentage: 1.75%
+All other columns contain no missing values.
+
+2. OUTLIER DETECTION
+
+Annual Income ($): 0
+Spending Score (1-100): 0
+Family Size: 0
+Work Experience: 5
+
+
