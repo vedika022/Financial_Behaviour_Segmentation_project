@@ -1,0 +1,80 @@
+1> Univariate Analysis
+
+Age
+The customers' ages range from approximately 1 to 100 years.
+The distribution is relatively spread across the age range, with noticeable concentrations around the 20–40 and 50–70 age groups.
+There does not appear to be a single dominant age group.
+
+Annual Income
+Annual income ranges from approximately $0 to $200,000.
+The majority of customers have annual incomes between approximately $50,000 and $150,000.
+Customer counts are relatively low in the lower-income range, particularly below $50,000.
+The distribution shows several areas of higher concentration rather than a single clear peak.
+
+Spending Score
+Spending scores range from 1 to 100.
+A substantial concentration of customers has spending scores between approximately 40 and 60.
+Higher spending scores, particularly around 80–100, also have relatively high representation.
+The distribution therefore appears to contain customers with both moderate and high spending behaviour.
+
+Gender Distribution
+Female data is more than male data 
+
+Profession 
+Artist is the most repeating profession among the customers
+Home maker is the least common 
+
+Work Experience
+Work experience ranges from approximately 0 to 17 years.
+The distribution is concentrated toward the lower end, with the majority of customers having 0–2 years of work experience.
+There is another noticeable concentration around 4–10 years, although with lower frequencies.
+Very few customers have more than 10 years of work experience.
+Overall, the distribution is right-skewed, with a relatively small number of customers having high work experience.
+
+Family Size
+Family size ranges from approximately 1 to 9 members.
+Customers with 2–4 family members make up a substantial portion of the dataset.
+Family size of 2 has the highest frequency.
+The number of customers generally decreases as family size increases.
+Very few customers have 8–9 family members.
+
+
+2> Bivariate Analysis 
+
+1. Annual Income vs Spending Score
+Customers are distributed across a wide range of income and spending scores.
+There does not appear to be a strong linear relationship between annual income and spending score.
+Customers with similar income levels can exhibit substantially different spending behaviours.
+This suggests that income alone does not determine spending behaviour, which makes this relationship particularly relevant for customer segmentation.
+
+2. Age vs Spending Score
+Spending scores are widely distributed across almost the entire age range.
+There is no clear linear relationship between age and spending score.
+Customers of different ages can have both low and high spending scores.
+Therefore, age does not appear to be a strong standalone predictor of spending behaviour based on this visualization.
+
+3. Age vs Annual Income
+Annual income is widely distributed across most age groups.
+There is no obvious strong linear relationship between age and annual income.
+Higher-income customers can be found across a broad range of ages.
+This indicates that age and income provide relatively independent information in this dataset.
+
+3> Correlation Analysis 
+
+The correlations between the numerical features are all very close to zero:
+
+Age vs Annual Income: 0.02 → negligible correlation
+Age vs Spending Score: -0.04 → negligible negative correlation
+Age vs Work Experience: -0.01 → negligible correlation
+Age vs Family Size: 0.04 → negligible correlation
+Annual Income vs Spending Score: 0.02 → negligible correlation
+Annual Income vs Work Experience: 0.09 → very weak positive correlation
+Annual Income vs Family Size: 0.09 → very weak positive correlation
+Spending Score vs Work Experience: -0.03 → negligible negative correlation
+Spending Score vs Family Size: 0.00 → essentially no correlation
+Work Experience vs Family Size: 0.01 → negligible correlation
+
+4> Boxplot Analysis 
+
+The boxplot identifies a small number of high-work-experience observations as potential outliers, with at least one clearly visible point above the upper whisker. 
+
