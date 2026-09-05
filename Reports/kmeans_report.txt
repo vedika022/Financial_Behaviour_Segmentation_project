@@ -1,0 +1,33 @@
+Customer Segmentation - Cluster Naming Rationale
+
+Overview
+
+The K-Means model divided customers into eight segments based on Annual Income and Spending Score. Since cluster numbers have no inherent business meaning, descriptive names were assigned according to the average income and spending behaviour of each cluster.
+
+Segment 0 - Budget Moderates
+Low income (0.235) with moderate spending (0.434). Named Budget Moderates because customers have lower income but maintain average spending activity.
+
+Segment 1 - Mid-Market Moderates
+Medium income (0.526) and moderate spending (0.492). Named Mid-Market Moderates because both characteristics are close to the middle of the customer distribution.
+
+Segment 2 - High-Income Savers
+High income (0.799) with low spending (0.173). Named High-Income Savers because customers have relatively high income but demonstrate conservative spending behaviour.
+
+Segment 3 - Affluent Moderates
+High income (0.852) with moderate spending (0.495). Named Affluent Moderates because customers have high earning capacity but average spending activity.
+
+Segment 4 - Active Spenders
+Moderate income (0.573) with high spending (0.852). Named Active Spenders because high spending activity is the defining characteristic of this group.
+
+Segment 5 - Budget-Conscious
+Low income (0.409) and low spending (0.156). Named Budget-Conscious because customers show both relatively low income and spending activity.
+
+Segment 6 - Premium Customers
+High income (0.844) and high spending (0.843). Named Premium Customers because the combination of high income and high spending indicates a potentially high-value customer segment.
+
+Segment 7 - High-Engagement Budget
+Low income (0.307) with high spending (0.804). Named High-Engagement Budget because customers have relatively lower income but demonstrate strong spending engagement.
+
+Conclusion
+
+The segment names were based on the dominant income and spending characteristics of each cluster. Cluster IDs should be retained for technical purposes, while segment names can be used in reports, dashboards, and business analysis. Further analysis of age, profession, work experience, family size, and gender can be used to refine these segment descriptions.
