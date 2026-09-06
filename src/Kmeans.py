@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 from pathlib import Path
 import joblib
 # from sklearn.preprocessing import MinMaxScaler
@@ -40,10 +40,6 @@ for k in range(2, 11):
     score = silhouette_score(X, labels )
     silhouette_scores.append(score)
 
-    print(
-        f"K = {k}, "
-        f"Silhouette Score = {score:.4f}"
-        )
 
 # Plotting Silhoutte score and Elbow method to find optimal k
 
@@ -72,7 +68,7 @@ plt.show()
 
 # By analysing both graphs the optimal k value is 8
 
-optimal_k = 8 
+optimal_k = 7 
 
 # Final k means model 
 
@@ -125,10 +121,9 @@ cluster_names = {
     1: "Mid-Market Moderates",
     2: "High-Income Savers",
     3: "Affluent Moderates",
-    4: "Active Spenders",
+    4: "low Spenders",
     5: "Budget-Conscious",
-    6: "Premium Customers",
-    7: "High-Engagement Budget"
+    6: "Premium Customers"
 }
 
 # Create a new column with the segment name
@@ -186,17 +181,17 @@ output_columns = [
 
     "Annual Income ($)",
     "Spending Score (1-100)",
-    "Cluster",
+    "Cluster", 
     "Segment"
 ]
 
 final_df = df[output_columns]
 
-final_df.to_csv( "Data/customer_segmentation_results.csv", index=False )
+final_df.to_csv( "Data/customerS_segmented_kmeans.csv", index=False )
 
 # Save the trained model
 
-joblib.dump(kmeans, "models/kmeans_model.pkl")
+joblib.dump(kmeans, "models/kmeans_model_2.pkl")
 
 print("K-Means model saved successfully.")
 
