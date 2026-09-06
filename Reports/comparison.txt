@@ -1,0 +1,26 @@
+
+OUTPUT 1 for comparison
+
+                    Metric    Interpretation      K-means  Guassian Mixture
+0         silhouette_score  Higher is better     0.361011          0.371558
+1     davies_bouldin_score   Lower is better     0.862084          0.798441
+2  calinski_harabasz_score  Higher is better  1770.285221       1685.168091
+
+
+OUTPUT 2 for comparison 
+changed optimal k of k means to 7
+
+                    Metric    Interpretation      K-means  Guassian Mixture
+0         silhouette_score  Higher is better     0.379074          0.371558
+1     davies_bouldin_score   Lower is better     0.798274          0.798441
+2  calinski_harabasz_score  Higher is better  1808.675999       1685.168091
+
+OUTPUT 3 for comparison
+changed n_components of guassian mixture to 10 ( considering best aic and bic scores )
+
+                    Metric    Interpretation      K-means  Guassian Mixture
+0         silhouette_score  Higher is better     0.379074          0.254461
+1     davies_bouldin_score   Lower is better     0.798274          1.026409
+2  calinski_harabasz_score  Higher is better  1808.675999       1110.249282
+
+According to the final comparison K Means is the better model 
