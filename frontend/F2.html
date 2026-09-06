@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finsight · Financial Behaviour Segmentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['DM Sans','system-ui','sans-serif'], mono: ['JetBrains Mono','monospace'] },
+          colors: { ink:'#08111f', panel:'#0e1829', card:'#132033', line:'#24344a', mint:'#2dd4bf', gold:'#f5c542', coral:'#fb7185', sky:'#38bdf8', lilac:'#a78bfa' }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background:#08111f; }
+    .glass { background:linear-gradient(180deg,rgba(19,32,51,.94),rgba(14,24,41,.94)); border:1px solid #24344a; }
+    .page { display:none; }
+    .page.active { display:block; animation:fade .22s ease; }
+    @keyframes fade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+    .nav-btn.active { background:#2dd4bf; color:#08111f; }
+    .chip { font-family:'JetBrains Mono',monospace; }
+    .scroll-thin::-webkit-scrollbar { height:8px; width:8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background:#334155; border-radius:99px; }
+    input[type=range] { accent-color:#2dd4bf; }
+  </style>
+</head>
+<body class="font-sans text-slate-200 min-h-screen">
+  <div class="flex min-h-screen">
+    <aside class="w-64 shrink-0 border-r border-line bg-[#0b1526] hidden md:flex flex-col">
+      <div class="px-5 py-6 border-b border-line">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-mint/15 grid place-items-center text-mint font-bold">FS</div>
+          <div>
+            <p class="text-sm font-semibold">FinSight</p>
+            <p class="text-[11px] text-slate-400">Behaviour segmentation</p>
+          </div>
+        </div>
+      </div>
+      <nav class="p-3 space-y-1 flex-1">
+        <button data-page="overview" class="nav-btn active w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium">1 · Overview &amp; impact</button>
+        <button data-page="predict" class="nav-btn w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5">2 · Segments &amp; assign</button>
+        <button data-page="model" class="nav-btn w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-white/5">3 · Model health</button>
+      </nav>
+      <div class="p-4 border-t border-line text-[11px] text-slate-500 leading-relaxed">
+        Built from <span class="text-slate-300">Customers.csv</span><br/>
+        2,000 records · K-Means k=7<br/>
+        Winner vs GMM on silhouette / DB
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+      <header class="sticky top-0 z-20 backdrop-blur border-b border-line bg-[#08111f]/85">
+        <div class="px-4 md:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 id="pageTitle" class="text-lg md:text-xl font-semibold">Overview &amp; business impact</h1>
+            <p id="pageSub" class="text-xs text-slate-400">How income and spending score split the customer book</p>
+          </div>
+          <div class="text-[11px] text-slate-400 text-right">
+            Dataset: 8 features · Profession missing 1.75%<br/>
+            Clustering features: Annual Income + Spending Score
+          </div>
+        </div>
+        <div class="md:hidden px-4 pb-3 flex gap-2 overflow-x-auto">
+          <button data-page="overview" class="nav-btn active shrink-0 px-3 py-1.5 rounded-full text-xs font-medium">Overview</button>
+          <button data-page="predict" class="nav-btn shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-white/5">Segments</button>
+          <button data-page="model" class="nav-btn shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-white/5">Model</button>
+        </div>
+      </header>
+
+      <!-- PAGE 1 -->
+      <section id="page-overview" class="page active px-4 md:px-8 py-6 space-y-6">
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          <article class="glass rounded-2xl p-4">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400">Customers</p>
+            <p class="text-2xl font-semibold mt-1">2,000</p>
+            <p class="text-xs text-slate-400 mt-1">1,186 female · 814 male</p>
+          </article>
+          <article class="glass rounded-2xl p-4">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400">Mean annual income</p>
+            <p class="text-2xl font-semibold mt-1">$110,732</p>
+            <p class="text-xs text-slate-400 mt-1">Range $0 – $189,974</p>
+          </article>
+          <article class="glass rounded-2xl p-4">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400">Mean spending score</p>
+            <p class="text-2xl font-semibold mt-1">51.0</p>
+            <p class="text-xs text-slate-400 mt-1">Scale 0–100 · weak link to income</p>
+          </article>
+          <article class="glass rounded-2xl p-4">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400">Premium value share</p>
+            <p class="text-2xl font-semibold mt-1">35.9%</p>
+            <p class="text-xs text-mint mt-1">324 Premium Customers</p>
+          </article>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-4 lg:col-span-2">
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="text-sm font-semibold">Income vs spending score (sample of 240)</h2>
+              <select id="segFilter" class="bg-ink border border-line rounded-lg text-[11px] px-2 py-1">
+                <option value="ALL">All segments</option>
+              </select>
+            </div>
+            <div class="h-72"><canvas id="scatterChart"></canvas></div>
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">Segment headcount</h2>
+            <div class="h-72"><canvas id="segCount"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">Share of book value (income × spend score)</h2>
+            <div class="h-56"><canvas id="valueShare"></canvas></div>
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">What the business should do</h2>
+            <ul class="space-y-3 text-sm">
+              <li class="flex gap-3"><span class="mt-1 h-2 w-2 rounded-full bg-mint shrink-0"></span><div><p class="font-medium">Protect Premium Customers</p><p class="text-xs text-slate-400">16% of customers, ~36% of income×spend value. Priority for loyalty, premium cards, and relationship managers.</p></div></li>
+              <li class="flex gap-3"><span class="mt-1 h-2 w-2 rounded-full bg-gold shrink-0"></span><div><p class="font-medium">Convert high-income low spenders</p><p class="text-xs text-slate-400">Budget-Conscious + High-Income Savers earn a lot but spend little. Fit for deposits, investment plans, and targeted offers.</p></div></li>
+              <li class="flex gap-3"><span class="mt-1 h-2 w-2 rounded-full bg-coral shrink-0"></span><div><p class="font-medium">Watch high-spend mid income</p><p class="text-xs text-slate-400">Affluent Moderates spend like premiums on a smaller income. Good for rewards, but monitor over-extension.</p></div></li>
+              <li class="flex gap-3"><span class="mt-1 h-2 w-2 rounded-full bg-sky shrink-0"></span><div><p class="font-medium">Engage Low Spenders</p><p class="text-xs text-slate-400">Mid income, spend score ~16. Activation campaigns beat new-acquisition cost.</p></div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 2 -->
+      <section id="page-predict" class="page px-4 md:px-8 py-6 space-y-6">
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-5">
+            <h2 class="text-sm font-semibold">Assign a new customer</h2>
+            <p class="text-xs text-slate-400 mb-4">Nearest K-Means centroid on income and spending score — same features the model used.</p>
+            <label class="block text-xs">Annual income <span id="incVal" class="float-right font-mono text-mint">$110,000</span>
+              <input id="inc" type="range" min="0" max="190000" step="1000" value="110000" class="w-full mt-1" />
+            </label>
+            <label class="block text-xs mt-3">Spending score <span id="scVal" class="float-right font-mono text-sky">51</span>
+              <input id="sc" type="range" min="0" max="100" value="51" class="w-full mt-1" />
+            </label>
+            <div class="mt-4 bg-ink rounded-xl p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-400">Predicted segment</p>
+              <p id="predSeg" class="text-xl font-semibold text-mint mt-1">Mid-Market Moderates</p>
+              <p id="predNote" class="text-xs text-slate-400 mt-2">Closest centroid among the 7 K-Means groups.</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4 lg:col-span-2">
+            <h2 class="text-sm font-semibold mb-3">Segment profile (original scale)</h2>
+            <div class="h-64"><canvas id="profileChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">Profession mix of the book</h2>
+            <div class="h-56"><canvas id="profChart"></canvas></div>
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">Mean spend score by age band</h2>
+            <div class="h-56"><canvas id="ageSpend"></canvas></div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-4 overflow-hidden">
+          <div class="flex items-center justify-between mb-3 gap-3">
+            <h2 class="text-sm font-semibold">Example customers from each segment</h2>
+            <input id="searchCust" placeholder="Filter name, profession, segment" class="bg-ink border border-line rounded-lg text-xs px-3 py-1.5 w-56 outline-none" />
+          </div>
+          <div class="overflow-x-auto scroll-thin">
+            <table class="w-full text-xs min-w-[780px]">
+              <thead class="text-slate-400 text-left">
+                <tr class="border-b border-line">
+                  <th class="py-2 pr-3">ID</th>
+                  <th class="py-2 pr-3">Gender</th>
+                  <th class="py-2 pr-3">Age</th>
+                  <th class="py-2 pr-3">Income</th>
+                  <th class="py-2 pr-3">Spend</th>
+                  <th class="py-2 pr-3">Profession</th>
+                  <th class="py-2 pr-3">Work yrs</th>
+                  <th class="py-2 pr-3">Family</th>
+                  <th class="py-2">Segment</th>
+                </tr>
+              </thead>
+              <tbody id="custBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 3 -->
+      <section id="page-model" class="page px-4 md:px-8 py-6 space-y-6">
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          <article class="glass rounded-2xl p-4"><p class="text-[11px] text-slate-400 uppercase">Chosen model</p><p class="text-2xl font-semibold">K-Means</p><p class="text-[11px] text-mint">k = 7 clusters</p></article>
+          <article class="glass rounded-2xl p-4"><p class="text-[11px] text-slate-400 uppercase">Silhouette</p><p class="text-2xl font-semibold">0.379</p><p class="text-[11px] text-sky">Higher is better</p></article>
+          <article class="glass rounded-2xl p-4"><p class="text-[11px] text-slate-400 uppercase">Davies–Bouldin</p><p class="text-2xl font-semibold">0.798</p><p class="text-[11px] text-gold">Lower is better</p></article>
+          <article class="glass rounded-2xl p-4"><p class="text-[11px] text-slate-400 uppercase">Calinski–Harabasz</p><p class="text-2xl font-semibold">1,809</p><p class="text-[11px] text-lilac">Higher is better</p></article>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">K-Means vs Gaussian Mixture (final run)</h2>
+            <div class="h-64"><canvas id="compareChart"></canvas></div>
+            <p class="text-[11px] text-slate-500 mt-2">GMM used 10 components (best AIC/BIC). Separation metrics then dropped, so K-Means was kept.</p>
+          </div>
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">Elbow inertia (k = 2 … 10)</h2>
+            <div class="h-64"><canvas id="elbowChart"></canvas></div>
+            <p class="text-[11px] text-slate-500 mt-2">Code notes an elbow near 7–8. Final saved model uses k = 7.</p>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-4">
+            <h2 class="text-sm font-semibold mb-3">GMM cluster sizes (10 components)</h2>
+            <div class="h-52"><canvas id="gmmSizes"></canvas></div>
+          </div>
+          <div class="glass rounded-2xl p-4 lg:col-span-2">
+            <h2 class="text-sm font-semibold mb-2">Data-quality notes from the audit</h2>
+            <ul class="text-sm space-y-2 text-slate-300">
+              <li>• 2,000 rows × 8 columns. Only <span class="text-mint">Profession</span> is missing (35 rows, 1.75%) — filled with the mode (Artist) before clustering.</li>
+              <li>• Clustering used MinMax-scaled <span class="text-mint">Annual Income</span> and <span class="text-mint">Spending Score</span> only.</li>
+              <li>• Correlations between numeric fields are all ~0. Age vs income 0.02, income vs spend 0.02 — that is why two-feature clustering still finds groups.</li>
+              <li>• Work Experience has 5 outlier points; Age includes 0 (data error). These were not used as clustering features.</li>
+              <li>• Artist is the most common profession (612); Homemaker is the least (60).</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 text-sm text-slate-300 leading-relaxed">
+          <h2 class="font-semibold text-white mb-2">How to read model health here</h2>
+          This project is unsupervised, so there is no accuracy or ROC-AUC. Quality is judged by cluster separation (silhouette, Davies–Bouldin, Calinski–Harabasz) plus whether the groups are usable for marketing. K-Means with 7 groups beats GMM on those three scores in the final comparison file. Segment names come from each cluster’s mean income and spend — cluster IDs stay in the saved CSV for the model.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const POINTS = [[104494, 28, 32, "LS", "M", 1861], [181760, 35, 23, "HS", "M", 354], [133614, 58, 97, "MM", "F", 1334], [118385, 8, 66, "BC", "F", 906], [86297, 42, 75, "MM", "F", 1290], [152405, 4, 72, "BC", "F", 1274], [116782, 73, 0, "PC", "F", 939], [103195, 68, 20, "MM", "M", 1732], [9000, 59, 18, "BM", "M", 66], [82474, 31, 27, "LS", "M", 1324], [71000, 50, 51, "BM", "F", 57], [70733, 63, 24, "BM", "M", 1293], [105391, 42, 2, "MM", "F", 1119], [112818, 85, 10, "PC", "F", 585], [140478, 43, 85, "HS", "M", 375], [65000, 89, 78, "AM", "M", 276], [168670, 37, 5, "HS", "M", 747], [38000, 11, 59, "LS", "M", 129], [138775, 17, 45, "BC", "M", 1647], [165810, 38, 46, "HS", "F", 1853], [84622, 45, 71, "MM", "M", 675], [186130, 61, 82, "HS", "M", 1665], [149797, 19, 62, "BC", "F", 1982], [101031, 28, 6, "LS", "F", 1084], [75125, 89, 97, "AM", "F", 1923], [80000, 49, 20, "MM", "M", 100], [87976, 38, 70, "MM", "M", 1180], [130431, 52, 89, "MM", "M", 965], [152069, 42, 70, "HS", "M", 793], [20000, 87, 23, "AM", "F", 30], [150444, 27, 43, "BC", "F", 629], [184801, 8, 20, "BC", "F", 945], [181775, 61, 91, "HS", "F", 573], [161212, 14, 1, "BC", "F", 908], [155396, 1, 81, "BC", "F", 1081], [88452, 40, 11, "MM", "M", 451], [118096, 36, 71, "MM", "M", 1610], [65031, 23, 98, "LS", "F", 1291], [130267, 45, 28, "MM", "M", 1079], [27000, 32, 46, "BM", "F", 255], [12000, 29, 23, "BM", "F", 125], [151985, 29, 77, "BC", "M", 1928], [44000, 65, 27, "BM", "F", 252], [53509, 98, 49, "AM", "M", 586], [87764, 59, 37, "MM", "M", 1569], [169346, 55, 60, "HS", "F", 825], [88565, 16, 36, "LS", "M", 508], [65528, 73, 75, "AM", "F", 890], [91000, 55, 70, "MM", "M", 71], [131863, 94, 17, "PC", "M", 1609], [107794, 17, 18, "LS", "M", 1533], [7000, 16, 32, "LS", "F", 248], [146432, 25, 72, "BC", "M", 1451], [12000, 70, 86, "BM", "M", 213], [167214, 94, 52, "PC", "F", 910], [152429, 76, 92, "PC", "F", 1742], [78795, 44, 58, "BM", "F", 1245], [104098, 48, 88, "MM", "F", 1697], [108159, 18, 73, "LS", "F", 1183], [63364, 61, 99, "BM", "M", 362], [178866, 97, 80, "PC", "F", 1474], [180831, 33, 77, "HS", "F", 679], [86172, 55, 94, "MM", "F", 1622], [53622, 27, 84, "LS", "F", 1090], [59244, 80, 63, "AM", "M", 1988], [145491, 72, 26, "PC", "F", 1848], [185306, 47, 60, "HS", "F", 988], [73107, 48, 30, "BM", "F", 1513], [25000, 54, 19, "BM", "F", 112], [91549, 23, 23, "LS", "F", 1488], [116095, 8, 63, "BC", "F", 1454], [184522, 43, 10, "HS", "F", 384], [105448, 40, 34, "MM", "F", 1396], [166644, 66, 38, "HS", "F", 1055], [87878, 55, 98, "MM", "F", 756], [102861, 40, 91, "MM", "F", 325], [71543, 1, 81, "LS", "M", 1624], [107409, 2, 67, "LS", "M", 788], [106681, 15, 72, "LS", "M", 369], [184060, 98, 66, "PC", "F", 1820], [97000, 47, 32, "MM", "F", 70], [155151, 16, 21, "BC", "M", 858], [147052, 86, 19, "PC", "F", 1484], [172039, 51, 96, "HS", "M", 1556], [163473, 52, 57, "HS", "F", 1692], [183643, 51, 94, "HS", "F", 1475], [82377, 37, 72, "MM", "M", 1799], [187536, 66, 39, "HS", "M", 479], [85000, 63, 43, "MM", "F", 282], [68901, 70, 49, "AM", "F", 1648], [70844, 22, 48, "LS", "F", 1557], [164520, 47, 15, "HS", "M", 1730], [57000, 93, 1, "AM", "F", 211], [87000, 41, 62, "MM", "M", 298], [155638, 81, 63, "PC", "F", 1885], [55639, 63, 12, "BM", "M", 1834], [91794, 83, 74, "AM", "M", 652], [184088, 21, 21, "BC", "M", 1234], [116971, 76, 63, "PC", "F", 1503], [158280, 92, 90, "PC", "M", 1932], [67582, 13, 24, "LS", "F", 917], [69814, 53, 50, "BM", "F", 994], [179911, 24, 28, "BC", "M", 430], [84658, 66, 27, "AM", "M", 1371], [50000, 11, 14, "LS", "F", 240], [128258, 48, 25, "MM", "M", 880], [123083, 44, 58, "MM", "M", 621], [38000, 18, 12, "LS", "M", 257], [74928, 12, 7, "LS", "F", 612], [88763, 1, 33, "LS", "F", 545], [104600, 57, 56, "MM", "M", 772], [75033, 30, 55, "LS", "F", 1420], [187841, 38, 43, "HS", "M", 1042], [52648, 2, 6, "LS", "F", 1790], [62628, 64, 46, "BM", "F", 760], [91503, 26, 34, "LS", "M", 383], [103706, 50, 99, "MM", "F", 1104], [87365, 3, 12, "LS", "F", 974], [72303, 98, 51, "AM", "F", 353], [121172, 97, 52, "PC", "F", 1606], [189709, 18, 7, "BC", "M", 1826], [178217, 38, 19, "HS", "F", 1037], [187305, 85, 36, "PC", "M", 1108], [135115, 54, 34, "MM", "F", 495], [163463, 31, 86, "BC", "F", 394], [180341, 75, 61, "PC", "F", 1547], [53231, 41, 56, "BM", "M", 465], [76646, 61, 95, "BM", "F", 887], [157588, 76, 16, "PC", "F", 1194], [130898, 30, 60, "BC", "F", 367], [173047, 17, 68, "BC", "F", 1894], [173682, 89, 44, "PC", "F", 1874], [125836, 69, 16, "PC", "M", 745], [115832, 92, 48, "PC", "M", 530], [133822, 78, 62, "PC", "F", 803], [184838, 18, 74, "BC", "M", 1224], [104589, 85, 84, "AM", "M", 1979], [164038, 53, 52, "HS", "F", 1906], [170226, 31, 6, "BC", "M", 1700], [115438, 37, 27, "MM", "F", 1545], [96693, 28, 4, "LS", "M", 1314], [165052, 12, 63, "BC", "F", 307], [137206, 4, 95, "BC", "M", 1667], [170319, 46, 12, "HS", "F", 863], [68161, 23, 73, "LS", "F", 1567], [104834, 44, 47, "MM", "F", 531], [158549, 98, 3, "PC", "F", 655], [52152, 17, 47, "LS", "M", 1260], [3000, 14, 78, "LS", "F", 234], [36000, 56, 27, "BM", "M", 121], [80160, 10, 70, "LS", "M", 1698], [157207, 52, 64, "HS", "F", 950], [135931, 74, 29, "PC", "M", 618], [161130, 98, 38, "PC", "F", 1179], [120487, 14, 61, "BC", "F", 308], [92000, 88, 29, "AM", "F", 136], [172051, 62, 16, "HS", "F", 555], [128573, 97, 15, "PC", "M", 1674], [177359, 56, 71, "HS", "F", 584], [124194, 32, 47, "MM", "F", 1641], [59163, 100, 54, "AM", "M", 671], [147548, 45, 3, "HS", "F", 835], [13000, 48, 66, "BM", "M", 110], [136747, 3, 21, "BC", "F", 1165], [155432, 21, 85, "BC", "F", 1960], [98444, 76, 86, "AM", "F", 1465], [78669, 75, 58, "AM", "M", 1729], [93555, 13, 88, "LS", "M", 1243], [22000, 92, 0, "AM", "F", 212], [110309, 21, 29, "LS", "F", 1768], [165019, 12, 54, "BC", "F", 1121], [137397, 33, 89, "BC", "F", 680], [68765, 69, 42, "AM", "M", 1951], [108509, 36, 60, "MM", "F", 1839], [113585, 31, 96, "MM", "F", 412], [159010, 84, 95, "PC", "F", 1325], [76521, 29, 74, "LS", "M", 783], [75178, 41, 36, "BM", "M", 1346], [157290, 22, 30, "BC", "F", 875], [81640, 95, 25, "AM", "F", 1653], [170647, 70, 58, "PC", "F", 1279], [54251, 7, 30, "LS", "M", 786], [103531, 90, 43, "AM", "M", 1819], [126669, 53, 83, "MM", "M", 1199], [57535, 84, 25, "AM", "M", 808], [153217, 83, 69, "PC", "F", 713], [166983, 69, 30, "HS", "F", 1991], [183282, 34, 4, "HS", "F", 1660], [142214, 32, 97, "BC", "M", 1191], [126543, 45, 22, "MM", "M", 1226], [154007, 32, 71, "BC", "F", 603], [91000, 36, 94, "MM", "M", 271], [104467, 72, 50, "AM", "F", 1385], [7000, 28, 84, "BM", "M", 232], [25000, 42, 31, "BM", "F", 50], [120597, 96, 93, "PC", "M", 463], [90414, 55, 65, "MM", "F", 1106], [142801, 23, 76, "BC", "M", 856], [171323, 78, 80, "PC", "F", 694], [131093, 79, 4, "PC", "M", 1552], [58459, 67, 15, "AM", "F", 1873], [180479, 74, 58, "PC", "F", 527], [99000, 92, 36, "AM", "M", 174], [85737, 37, 36, "MM", "M", 721], [135088, 5, 75, "BC", "F", 415], [36000, 35, 95, "BM", "M", 238], [127833, 2, 58, "BC", "F", 1473], [76474, 5, 75, "LS", "F", 1336], [173190, 37, 58, "HS", "F", 1064], [71000, 73, 31, "AM", "M", 24], [156567, 89, 43, "PC", "F", 1767], [48000, 59, 54, "BM", "F", 64], [19000, 58, 93, "BM", "F", 290], [76000, 17, 41, "LS", "F", 189], [70119, 93, 62, "AM", "F", 702], [115699, 61, 87, "MM", "M", 1815], [118092, 100, 29, "PC", "M", 1138], [146858, 75, 13, "PC", "F", 355], [187667, 12, 86, "BC", "F", 417], [55875, 94, 70, "AM", "F", 1246], [114776, 55, 82, "MM", "M", 931], [78000, 28, 45, "LS", "F", 197], [135268, 53, 83, "MM", "M", 580], [112358, 27, 51, "MM", "F", 1135], [53002, 73, 29, "AM", "F", 1814], [142612, 58, 64, "HS", "M", 1935], [77779, 62, 25, "BM", "F", 434], [65000, 41, 23, "BM", "F", 101], [186723, 42, 23, "HS", "F", 1655], [151696, 82, 75, "PC", "F", 395], [132537, 44, 76, "MM", "M", 1939], [84000, 33, 39, "LS", "F", 221], [135164, 75, 51, "PC", "F", 1676], [157358, 52, 33, "HS", "M", 1498], [89473, 85, 1, "AM", "F", 1785], [148431, 99, 4, "PC", "F", 345], [88811, 52, 93, "MM", "M", 1028], [78971, 89, 63, "AM", "F", 889], [135076, 60, 68, "MM", "M", 1351], [148607, 59, 7, "HS", "F", 553]];
+
+    const SEG = {
+      BM: { name:'Budget Moderates', color:'#38bdf8', n:220, inc:51250, sc:49.6, action:'Budget tools and fee-light accounts' },
+      MM: { name:'Mid-Market Moderates', color:'#64748b', n:308, inc:107327, sc:49.0, action:'Standard product mix / hold' },
+      HS: { name:'High-Income Savers', color:'#f5c542', n:266, inc:165789, sc:50.0, action:'Deposits and investment plans' },
+      AM: { name:'Affluent Moderates', color:'#a78bfa', n:306, inc:72411, sc:82.9, action:'Rewards; watch overspend' },
+      LS: { name:'Low Spenders', color:'#fb7185', n:304, inc:73296, sc:16.1, action:'Activation / engagement' },
+      BC: { name:'Budget-Conscious', color:'#fb923c', n:272, inc:150543, sc:17.3, action:'Savings products, not extra credit' },
+      PC: { name:'Premium Customers', color:'#2dd4bf', n:324, inc:147051, sc:85.5, action:'Loyalty and premium relationship' }
+    };
+    const SEG_ORDER = ['BM','LS','AM','MM','PC','BC','HS'];
+
+    const titles = {
+      overview: ['Overview & business impact', 'How income and spending score split the customer book'],
+      predict: ['Segments & assignment', 'Name the groups and assign a new customer to the nearest centroid'],
+      model: ['Model health', 'K-Means vs GMM, elbow choice, and data-quality checks']
+    };
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.getElementById('pageTitle').textContent = titles[page][0];
+        document.getElementById('pageSub').textContent = titles[page][1];
+      });
+    });
+
+    const sel = document.getElementById('segFilter');
+    SEG_ORDER.forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = SEG[k].name;
+      sel.appendChild(o);
+    });
+
+    const grid = { color:'rgba(36,52,74,.9)' };
+    const ticks = { color:'#94a3b8', font:{ size:11 } };
+
+    function scatterDatasets(filter) {
+      const groups = {};
+      POINTS.forEach(p => {
+        const [inc, sc, age, code] = p;
+        if (filter !== 'ALL' && code !== filter) return;
+        if (!groups[code]) groups[code] = [];
+        groups[code].push({ x: inc, y: sc });
+      });
+      return Object.keys(groups).map(code => ({
+        label: SEG[code].name,
+        data: groups[code],
+        backgroundColor: SEG[code].color,
+        pointRadius: 4
+      }));
+    }
+
+    const scatterChart = new Chart(document.getElementById('scatterChart'), {
+      type: 'scatter',
+      data: { datasets: scatterDatasets('ALL') },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color:'#cbd5e1', boxWidth:10, font:{ size:10 } } } },
+        scales: {
+          x: { grid, ticks, title: { display:true, text:'Annual income ($)', color:'#94a3b8' } },
+          y: { grid, ticks, min:0, max:100, title: { display:true, text:'Spending score', color:'#94a3b8' } }
+        }
+      }
+    });
+    sel.addEventListener('change', () => {
+      scatterChart.data.datasets = scatterDatasets(sel.value);
+      scatterChart.update();
+    });
+
+    new Chart(document.getElementById('segCount'), {
+      type: 'doughnut',
+      data: {
+        labels: SEG_ORDER.map(k => SEG[k].name),
+        datasets: [{ data: SEG_ORDER.map(k => SEG[k].n), backgroundColor: SEG_ORDER.map(k => SEG[k].color), borderWidth:0 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#cbd5e1', boxWidth:8, font:{ size:10 } } } } }
+    });
+
+    new Chart(document.getElementById('valueShare'), {
+      type: 'bar',
+      data: {
+        labels: ['Premium','High-Inc. Savers','Affluent Mod.','Mid-Market','Budget-Consc.','Budget Mod.','Low Spenders'],
+        datasets: [{ data:[35.9,19.4,16.1,14.3,6.2,4.9,3.2], backgroundColor:['#2dd4bf','#f5c542','#a78bfa','#64748b','#fb923c','#38bdf8','#fb7185'] }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{display:false}, ticks }, y:{ grid, ticks, title:{ display:true, text:'% of income × spend', color:'#94a3b8' } } } }
+    });
+
+    new Chart(document.getElementById('profileChart'), {
+      type: 'bar',
+      data: {
+        labels: SEG_ORDER.map(k => SEG[k].name.replace(' Moderates',' Mod.')),
+        datasets: [
+          { label:'Mean income ($k)', data: SEG_ORDER.map(k => +(SEG[k].inc/1000).toFixed(1)), backgroundColor:'#38bdf8', yAxisID:'y' },
+          { label:'Mean spend score', data: SEG_ORDER.map(k => SEG[k].sc), backgroundColor:'#2dd4bf', yAxisID:'y1' }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:'#cbd5e1' } } },
+        scales:{
+          x:{ grid:{display:false}, ticks:{ ...ticks, maxRotation:40 } },
+          y:{ grid, ticks, position:'left', title:{ display:true, text:'Income $k', color:'#94a3b8' } },
+          y1:{ grid:{ display:false }, ticks, position:'right', min:0, max:100, title:{ display:true, text:'Spend score', color:'#94a3b8' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('profChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Artist','Healthcare','Entertainment','Engineer','Doctor','Executive','Lawyer','Marketing','Homemaker','Unknown'],
+        datasets: [{ data:[612,339,234,179,161,153,142,85,60,35], backgroundColor:'#a78bfa' }]
+      },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid, ticks }, y:{ grid:{display:false}, ticks } } }
+    });
+
+    new Chart(document.getElementById('ageSpend'), {
+      type: 'line',
+      data: {
+        labels: ['0–18','19–30','31–45','46–60','61–75','76–99'],
+        datasets: [
+          { label:'Mean spend score', data:[53.8,52.4,49.7,49.5,50.3,50.3], borderColor:'#2dd4bf', tension:.3, yAxisID:'y' },
+          { label:'Count', data:[355,263,328,305,286,463], borderColor:'#38bdf8', borderDash:[5,4], tension:.3, yAxisID:'y1' }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:'#cbd5e1' } } },
+        scales:{
+          x:{ grid, ticks },
+          y:{ grid, ticks, min:45, max:56, title:{ display:true, text:'Spend score', color:'#94a3b8' } },
+          y1:{ grid:{display:false}, ticks, position:'right', title:{ display:true, text:'Customers', color:'#94a3b8' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('compareChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Silhouette ↑','Davies–Bouldin ↓','Calinski–Harabasz ↑ /1000'],
+        datasets: [
+          { label:'K-Means (k=7)', data:[0.379, 0.798, 1.809], backgroundColor:'#2dd4bf' },
+          { label:'GMM (10 comp.)', data:[0.254, 1.026, 1.110], backgroundColor:'#64748b' }
+        ]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#cbd5e1' } } }, scales:{ x:{ grid:{display:false}, ticks }, y:{ grid, ticks } } }
+    });
+
+    new Chart(document.getElementById('elbowChart'), {
+      type: 'line',
+      data: {
+        labels: ['2','3','4','5','6','7','8','9','10'],
+        datasets: [{ label:'Inertia (illustrative curve from elbow search)', data:[310, 210, 155, 120, 98, 82, 73, 67, 63], borderColor:'#f5c542', tension:.25, pointRadius:4 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#cbd5e1', font:{ size:10 } } } }, scales:{ x:{ grid, ticks, title:{ display:true, text:'k', color:'#94a3b8' } }, y:{ grid, ticks, title:{ display:true, text:'Inertia', color:'#94a3b8' } } } }
+    });
+
+    new Chart(document.getElementById('gmmSizes'), {
+      type: 'bar',
+      data: {
+        labels: ['0','1','2','3','4','5','6','7','8','9'],
+        datasets: [{ data:[180,224,345,199,333,237,166,113,58,145], backgroundColor:'#38bdf8' }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{display:false}, ticks }, y:{ grid, ticks } } }
+    });
+
+    const customers = [
+      [397,'F',87,70419,69,'Homemaker',6,4,'Affluent Moderates'],
+      [227,'F',25,40000,77,'Artist',5,4,'Affluent Moderates'],
+      [244,'F',77,47000,58,'Artist',0,6,'Budget Moderates'],
+      [82,'M',38,61000,55,'Healthcare',6,3,'Budget Moderates'],
+      [1544,'F',13,174530,30,'Lawyer',1,6,'Budget-Conscious'],
+      [748,'F',54,176885,10,'Entertainment',0,3,'Budget-Conscious'],
+      [905,'F',47,157661,57,'Healthcare',6,6,'High-Income Savers'],
+      [1586,'M',72,143169,58,'Engineer',0,4,'High-Income Savers'],
+      [582,'F',33,111191,67,'Artist',9,4,'Mid-Market Moderates'],
+      [1963,'M',70,124359,51,'Homemaker',7,7,'Mid-Market Moderates'],
+      [1052,'M',17,116822,84,'Doctor',1,3,'Premium Customers'],
+      [1500,'M',72,166043,93,'Doctor',7,6,'Premium Customers'],
+      [1416,'F',54,79925,30,'Healthcare',0,3,'Low Spenders'],
+      [940,'F',80,67781,1,'Entertainment',4,4,'Low Spenders']
+    ];
+    function renderRows(q='') {
+      q = q.toLowerCase();
+      document.getElementById('custBody').innerHTML = customers.filter(r => r.join(' ').toLowerCase().includes(q)).map(r => `
+        <tr class="border-b border-line/60">
+          <td class="py-2 pr-3 font-mono">${r[0]}</td>
+          <td class="py-2 pr-3">${r[1]}</td>
+          <td class="py-2 pr-3">${r[2]}</td>
+          <td class="py-2 pr-3 font-mono">$${r[3].toLocaleString()}</td>
+          <td class="py-2 pr-3">${r[4]}</td>
+          <td class="py-2 pr-3">${r[5]}</td>
+          <td class="py-2 pr-3">${r[6]}</td>
+          <td class="py-2 pr-3">${r[7]}</td>
+          <td class="py-2 text-mint">${r[8]}</td>
+        </tr>`).join('');
+    }
+    renderRows();
+    document.getElementById('searchCust').addEventListener('input', e => renderRows(e.target.value));
+
+    function nearest() {
+      const inc = +document.getElementById('inc').value;
+      const sc = +document.getElementById('sc').value;
+      document.getElementById('incVal').textContent = '$' + inc.toLocaleString();
+      document.getElementById('scVal').textContent = sc;
+      let best = null, bestD = Infinity;
+      SEG_ORDER.forEach(k => {
+        const di = (inc - SEG[k].inc) / 190000;
+        const ds = (sc - SEG[k].sc) / 100;
+        const d = di*di + ds*ds;
+        if (d < bestD) { bestD = d; best = k; }
+      });
+      document.getElementById('predSeg').textContent = SEG[best].name;
+      document.getElementById('predNote').textContent = 'Mean profile $' + Math.round(SEG[best].inc).toLocaleString() + ' income, spend ' + SEG[best].sc + '. Action: ' + SEG[best].action + '.';
+    }
+    document.getElementById('inc').addEventListener('input', nearest);
+    document.getElementById('sc').addEventListener('input', nearest);
+    nearest();
+  </script>
+</body>
+</html>
