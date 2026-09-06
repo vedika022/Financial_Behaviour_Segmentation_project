@@ -18,11 +18,11 @@ def show_numeric_histplots() :
     plt.title('Age Distribution')
 
     plt.subplot(1,3,2)
-    sns.histplot(df['Annual Income ($)'], kde=True, bins=25)
+    sns.histplot(df['Annual Income ($)'], kde=True, bins=25, color = 'green')
     plt.title('Annual Income Distribution')
 
     plt.subplot(1,3,3)
-    sns.histplot(df['Spending Score (1-100)'], kde=True, bins=25)
+    sns.histplot(df['Spending Score (1-100)'], kde=True, bins=25, color = 'green')
     plt.title('Spending Score Distribution')
 
     plt.tight_layout()
@@ -72,7 +72,7 @@ def show_bivariate_plots():
     sns.scatterplot(
         data=df,
         x="Annual Income ($)",
-        y="Spending Score (1-100)"
+        y="Spending Score (1-100)", color = 'green'
     )
     plt.title("Income vs Spending Score")
 
